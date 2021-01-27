@@ -1,0 +1,45 @@
+api:
+  dashboard: true
+ 
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+    forwardedHeaders:
+     trustedIPs:
+     - "10.0.0.0/24"
+  dashboard:
+    address: ":8080"
+
+providers:
+  file:
+    directory: /traefik/
+    watch: true
+  consulCatalog:
+   endpoint:
+    address: 10.0.0.3:8500
+    token: "123456"    # SAME AS consul/config/acl.json
+
+
+certificatesResolvers:
+  myresolver:
+    acme:
+      email: MY@EMAIL.COM      # YOUR EMAIL
+      storage: acme.json
+      httpChallenge:
+        entryPoint: web
+        
+log:
+  filePath: "/etc/traefik/log/error.log"
+  format: "json"
+  level: WARN
+accessLog:
+  filePath: "/etc/traefik/log/access.log"
+  format: "json"
+  bufferingSize: 100

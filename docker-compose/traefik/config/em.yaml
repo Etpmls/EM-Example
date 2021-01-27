@@ -1,0 +1,40 @@
+http:
+ routers:
+  em-template:
+    entryPoints:
+    - "web"
+    - "websecure"
+    rule: "Host(`localhost`,`127.0.0.1`) && ( PathPrefix(`/admin`) || PathPrefix(`/em/static`) )"
+    service: em-template
+    middlewares:
+     - rateLimit
+    tls: 
+     certResolver: myresolver
+
+ middlewares:
+  forwardAuth:
+   forwardAuth:
+    address: "https://10.0.0.2/api/checkAuth"
+    tls:
+     insecureSkipVerify: true
+  rateLimit:
+   rateLimit:
+    average: 1000
+    period: 10s
+    burst: 2000
+  circuitBreaker_AuthHttpService:
+   circuitBreaker:
+    expression: "NetworkErrorRatio() > 0.10 || LatencyAtQuantileMS(10.0) > 3000"
+  circuitBreaker_AttachmentHttpService:
+   circuitBreaker:
+    expression: "NetworkErrorRatio() > 0.10 || LatencyAtQuantileMS(10.0) > 3000"
+  circuitBreaker_CmsHttpService:
+   circuitBreaker:
+    expression: "NetworkErrorRatio() > 0.10 || LatencyAtQuantileMS(10.0) > 3000"
+       
+ services:
+  em-template:
+   loadBalancer:
+    servers:
+    - url: "http://192.168.3.225:9527/"   # YOUR FRONT END ADDRESS
+    #- url: "http://192.168.2.221:9527/"
